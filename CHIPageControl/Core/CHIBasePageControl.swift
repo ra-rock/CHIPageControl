@@ -81,6 +81,34 @@ import UIKit
         }
     }
     
+    @IBInspectable open var currentPageBorderWidth: CGFloat = 0 {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+    
+    @IBInspectable open var currentPageBorderColor: UIColor? {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+    
+    @IBInspectable open var currentDiferentRadius: Bool = false {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+    
+    @IBInspectable open var currentPageRadius: CGFloat = 10 {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+    
+    open var realCurrentPageRadius: CGFloat {
+        return currentDiferentRadius ? currentPageRadius : radius
+    }
+    
     override open var tintColor: UIColor! {
         didSet {
             setNeedsLayout()
