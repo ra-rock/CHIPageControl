@@ -26,9 +26,16 @@
 import UIKit
 
 open class CHIPageControlAji: CHIBasePageControl {
+    fileprivate var maxDiamater: CGFloat {
+        return max(inactiveDiameter, activeDiameter)
+    }
     
-    fileprivate var diameter: CGFloat {
+    fileprivate var inactiveDiameter: CGFloat {
         return radius * 2
+    }
+    
+    fileprivate var activeDiameter: CGFloat {
+        return realCurrentPageRadius * 2
     }
 
     fileprivate var inactive = [CHILayer]()
@@ -60,23 +67,45 @@ open class CHIPageControlAji: CHIBasePageControl {
         super.layoutSubviews()
         
         let floatCount = CGFloat(inactive.count)
-        let x = (self.bounds.size.width - self.diameter*floatCount - self.padding*(floatCount-1))*0.5
-        let y = (self.bounds.size.height - self.diameter)*0.5
-        var frame = CGRect(x: x, y: y, width: self.diameter, height: self.diameter)
+        let x = (self.bounds.size.width - self.maxDiamater*floatCount - self.padding*(floatCount-1))*0.5
+        let y = (self.bounds.size.height - self.maxDiamater)*0.5
+        
+        var frame = CGRect(x: x, y: y, width: self.maxDiamater, height: self.maxDiamater)
 
-        active.cornerRadius = self.radius
-        active.backgroundColor = (self.currentPageTintColor ?? self.tintColor)?.cgColor
         active.frame = frame
-
+        var activeLayer = active
+        if self.activeDiameter < self.inactiveDiameter {
+            let insideActiveLayer = CHILayer()
+            let activeX = x + ((self.inactiveDiameter - self.activeDiameter)*0.5)
+            let activeY = y + ((self.inactiveDiameter - self.activeDiameter)*0.5)
+            insideActiveLayer.frame = CGRect(x: activeX, y: activeY, width: self.activeDiameter, height: self.activeDiameter)
+            active.addSublayer(insideActiveLayer)
+            activeLayer = insideActiveLayer
+        }
+        activeLayer.cornerRadius = self.realCurrentPageRadius
+        activeLayer.backgroundColor = (self.currentPageTintColor ?? self.tintColor)?.cgColor
+        activeLayer.borderWidth = currentPageBorderWidth
+        activeLayer.borderColor = currentPageBorderColor?.cgColor ?? active.backgroundColor
+        
         inactive.enumerated().forEach() { index, layer in
-            layer.backgroundColor = self.tintColor(position: index).withAlphaComponent(self.inactiveTransparency).cgColor
-            if self.borderWidth > 0 {
-                layer.borderWidth = self.borderWidth
-                layer.borderColor = self.tintColor(position: index).cgColor
+            var renderedLayer = layer
+            if self.activeDiameter > self.inactiveDiameter {
+                let insideLayer = CHILayer()
+                let inactiveX = (self.activeDiameter - self.inactiveDiameter)*0.5
+                let inactiveY = (self.activeDiameter - self.inactiveDiameter)*0.5
+                insideLayer.frame = CGRect(x: inactiveX, y: inactiveY, width: self.inactiveDiameter, height: self.inactiveDiameter)
+                layer.addSublayer(insideLayer)
+                renderedLayer = insideLayer
             }
-            layer.cornerRadius = self.radius
+        
+            renderedLayer.backgroundColor = self.tintColor(position: index).withAlphaComponent(self.inactiveTransparency).cgColor
+            if self.borderWidth > 0 {
+                renderedLayer.borderWidth = self.borderWidth
+                renderedLayer.borderColor = self.tintColor(position: index).cgColor
+            }
+            renderedLayer.cornerRadius = self.radius
             layer.frame = frame
-            frame.origin.x += self.diameter + self.padding
+            frame.origin.x += self.maxDiamater + self.padding
         }
         update(for: progress)
     }
@@ -102,8 +131,8 @@ open class CHIPageControlAji: CHIBasePageControl {
     }
 
     override open func sizeThatFits(_ size: CGSize) -> CGSize {
-        return CGSize(width: CGFloat(inactive.count) * self.diameter + CGFloat(inactive.count - 1) * self.padding,
-                      height: self.diameter)
+        return CGSize(width: CGFloat(inactive.count) * self.maxDiamater + CGFloat(inactive.count - 1) * self.padding,
+                      height: maxDiamater)
     }
     
     override open func didTouch(gesture: UITapGestureRecognizer) {
