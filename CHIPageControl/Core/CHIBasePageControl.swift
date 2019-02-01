@@ -118,7 +118,7 @@ import UIKit
     
     internal func setupDisplayLink() {
         self.displayLink = CADisplayLink(target: WeakProxy(self), selector: #selector(updateFrame))
-        self.displayLink?.add(to: .current, forMode: .commonModes)
+        self.displayLink?.add(to: .current, forMode: RunLoop.Mode.common)
     }
 
     @objc internal func updateFrame() {
@@ -188,7 +188,7 @@ import UIKit
         addGestureRecognizer(tapEvent!)
     }
     
-    internal func didTouch(gesture: UITapGestureRecognizer) {}
+    @objc internal func didTouch(gesture: UITapGestureRecognizer) {}
     
     func animate() {
         guard let moveToProgress = self.moveToProgress else { return }
@@ -228,7 +228,7 @@ import UIKit
     }
 
     deinit {
-        self.displayLink?.remove(from: .current, forMode: .commonModes)
+        self.displayLink?.remove(from: .current, forMode: RunLoop.Mode.common)
         self.displayLink?.invalidate()
     }
 }
